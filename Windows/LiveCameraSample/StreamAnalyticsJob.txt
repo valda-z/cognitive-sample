@@ -1,0 +1,40 @@
+﻿SELECT
+    1 as person,
+	CAST(DATEADD(hour,2,timecreated) as datetime) as Time,
+	DATENAME (year, DATEADD(hour,2,timecreated)) as Year,
+	DATENAME (month, DATEADD(hour,2,timecreated)) as Month,
+	DATENAME (day, DATEADD(hour,2,timecreated)) as Day,
+	DATENAME (weekday, DATEADD(hour,2,timecreated)) as WeekDay,
+	DATENAME (hour, DATEADD(hour,2,timecreated)) as Hour,
+    DATENAME (minute, DATEADD(hour,2,timecreated)) as Minute,
+	CAST(age as float) as Age,
+    UPPER(gender) as Gender,
+    emotion as Emotion,
+    CASE WHEN age<=10 THEN '00-10' 
+      WHEN age>10 AND age<=15 THEN '10-15'
+      WHEN age>15 AND age<=20 THEN '15-20'
+      WHEN age>20 AND age<=30 THEN '20-30'
+      WHEN age>30 AND age<=40 THEN '30-40'
+      WHEN age>40 AND age<=50 THEN '40-50'
+      WHEN age>50 AND age<=60 THEN '50-60'
+      ELSE '60-99' END as AgeGroup,
+    0 as HappinessMin,
+    100 as HappinessMax,
+    CASE WHEN emotion='SADNES' THEN 0 WHEN emotion='HAPPINESS' THEN 100 ELSE 50 END as HappinessIndex,
+    CASE WHEN gender='male' THEN 1 ELSE 0 END as GenderMale,
+    CASE WHEN gender='female' THEN 1 ELSE 0 END as GenderFemale,
+    CASE WHEN emotion='SADNESS' THEN 1 ELSE 0 END as EmotionSadness,
+    CASE WHEN emotion='NEUTRAL' THEN 1 ELSE 0 END as EmotionNeutral,
+    CASE WHEN emotion='HAPPINESS' THEN 1 ELSE 0 END as EmotionHappiness,
+    CASE WHEN age<=10 THEN 1 ELSE 0 END as Age_0_10,
+    CASE WHEN age>10 AND age<=15 THEN 1 ELSE 0 END as Age_10_15,
+    CASE WHEN age>15 AND age<=20 THEN 1 ELSE 0 END as Age_15_20,
+    CASE WHEN age>20 AND age<=30 THEN 1 ELSE 0 END as Age_20_30,
+    CASE WHEN age>30 AND age<=40 THEN 1 ELSE 0 END as Age_30_40,
+    CASE WHEN age>40 AND age<=50 THEN 1 ELSE 0 END as Age_40_50,
+    CASE WHEN age>50 AND age<=60 THEN 1 ELSE 0 END as Age_50_60,
+    CASE WHEN age>60 THEN 1 ELSE 0 END as Age_60_99
+INTO
+    [ValdaFaceDemoBI]
+FROM
+    [faces]
