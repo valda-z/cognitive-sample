@@ -43,7 +43,31 @@ namespace LiveCameraSample
 {
     internal class Aggregation
     {
-        public static Tuple<string, float> GetDominantEmotion(Scores scores)
+
+        public enum MySentiment
+        {
+            SADNESS = -1,
+            NEUTRAL = 0,
+            HAPPINESS = 1
+        }
+
+        public static MySentiment GetSentimentForIndex(int idx, Microsoft.ProjectOxford.Common.Contract.EmotionScores[] scoresarr)
+        {
+            var ret = MySentiment.NEUTRAL;
+
+            if (scoresarr.Length > idx)
+            {
+                var scores = scoresarr[idx];
+                float maxScore = 0;
+                if (scores.Happiness > maxScore) { maxScore = scores.Happiness; ret = MySentiment.HAPPINESS; }
+                if (scores.Neutral > maxScore) { maxScore = scores.Neutral; ret = MySentiment.NEUTRAL; }
+                if (scores.Sadness > maxScore) { maxScore = scores.Sadness; ret = MySentiment.SADNESS; }
+            }
+
+            return ret;
+        }
+
+        public static Tuple<string, float> GetDominantEmotion(Microsoft.ProjectOxford.Common.Contract.EmotionScores scores)
         {
             float maxScore = 0;
             string dominant = "";
@@ -58,17 +82,17 @@ namespace LiveCameraSample
             return new Tuple<string, float>(dominant, maxScore);
         }
 
-        public static string SummarizeEmotion(Scores scores)
+        public static string SummarizeEmotion(Microsoft.ProjectOxford.Common.Contract.EmotionScores scores)
         {
             var bestEmotion = Aggregation.GetDominantEmotion(scores);
-            return string.Format("{0}: {1:N1}", bestEmotion.Item1, bestEmotion.Item2);
+            return string.Format(" | {0}: {1:N0}%", bestEmotion.Item1, bestEmotion.Item2*100);
         }
 
         public static string SummarizeFaceAttributes(FaceAttributes attr)
         {
             List<string> attrs = new List<string>();
-            if (attr.Gender != null) attrs.Add(attr.Gender);
-            if (attr.Age > 0) attrs.Add(attr.Age.ToString());
+            if (attr.Gender != null) attrs.Add(attr.Gender.ToUpper());
+            if (attr.Age > 0) attrs.Add(attr.Age.ToString("0"));
             if (attr.HeadPose != null)
             {
                 // Simple rule to estimate whether person is facing camera. 

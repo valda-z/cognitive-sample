@@ -34,17 +34,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using OpenCvSharp;
@@ -55,6 +49,8 @@ using Microsoft.ProjectOxford.Face;
 using Microsoft.ProjectOxford.Face.Contract;
 using Microsoft.ProjectOxford.Vision;
 using VideoFrameAnalyzer;
+using Microsoft.Azure.EventHubs;
+using System.Text;
 
 namespace LiveCameraSample
 {
@@ -75,6 +71,10 @@ namespace LiveCameraSample
         private LiveCameraResult _latestResultsToDisplay = null;
         private AppMode _mode;
         private DateTime _startTime;
+        private int grabberDelay;
+
+        private static EventHubClient _eventHubClient;
+        private const string EhEntityPath = "faces";
 
         public enum AppMode
         {
@@ -89,13 +89,15 @@ namespace LiveCameraSample
         {
             InitializeComponent();
 
+            grabberDelay = 0;
+
             // Create grabber. 
             _grabber = new FrameGrabber<LiveCameraResult>();
 
             // Set up a listener for when the client receives a new frame.
             _grabber.NewFrameProvided += (s, e) =>
             {
-                if (_mode == AppMode.EmotionsWithClientFaceDetect)
+                if (_mode == AppMode.Faces)
                 {
                     // Local face detection. 
                     var rects = _localFaceDetector.DetectMultiScale(e.Frame.Image);
@@ -163,10 +165,12 @@ namespace LiveCameraSample
                         _latestResultsToDisplay = e.Analysis;
 
                         // Display the image and visualization in the right pane. 
-                        if (!_fuseClientRemoteResults)
+                        if (!_fuseClientRemoteResults && (grabberDelay==0 ||
+                            (_latestResultsToDisplay.Faces != null && _latestResultsToDisplay.Faces.Length > 0)))
                         {
                             RightImage.Source = VisualizeResult(e.Frame);
                         }
+
                     }
                 }));
             };
@@ -181,16 +185,73 @@ namespace LiveCameraSample
         ///     and containing the faces returned by the API. </returns>
         private async Task<LiveCameraResult> FacesAnalysisFunction(VideoFrame frame)
         {
-            // Encode image. 
-            var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
-            // Submit image to API. 
-            var attrs = new List<FaceAttributeType> { FaceAttributeType.Age,
-                FaceAttributeType.Gender, FaceAttributeType.HeadPose };
-            var faces = await _faceClient.DetectAsync(jpg, returnFaceAttributes: attrs);
-            // Count the API call. 
-            Properties.Settings.Default.FaceAPICallCount++;
-            // Output. 
-            return new LiveCameraResult { Faces = faces };
+            var rects = (OpenCvSharp.Rect[])frame.UserData;
+            Trace.WriteLine(">>>>>>>>>>>> " + rects.Length.ToString() + " ... " + DateTime.Now.ToString() + " | " + grabberDelay.ToString());
+            Face[] faces = null;
+            Microsoft.ProjectOxford.Common.Contract.EmotionScores[] emo = null;
+
+            // skipping detected image for few times
+            if (grabberDelay > 0)
+            {
+                grabberDelay++;
+                if (grabberDelay > 6)
+                {
+                    grabberDelay = 0;
+                }
+            }
+
+            if (rects.Length > 0 && grabberDelay==0)
+            {
+                grabberDelay = 1;
+
+                // Encode image. 
+                var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
+                var jpg2 = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
+
+                // Submit image to API. 
+                var attrs = new List<FaceAttributeType> { FaceAttributeType.Age,
+                FaceAttributeType.Gender };
+                faces = await _faceClient.DetectAsync(jpg, returnFaceAttributes: attrs);
+                // Count the API call. 
+                Properties.Settings.Default.FaceAPICallCount++;
+                // Output. 
+
+                // Submit image to API. 
+                Emotion[] emotions = null;
+
+                if (faces.Length > 0)
+                {
+                    Properties.Settings.Default.EmotionAPICallCount++;
+                    emotions = await _emotionClient.RecognizeAsync(jpg2);
+
+                    emo = emotions.Select(e => e.Scores).ToArray();
+
+                    int idx = 0;
+                    foreach (var _detectedFace in faces)
+                    {
+                        var faceData = new
+                        {
+                            personId = _detectedFace.FaceId,
+                            gender = _detectedFace.FaceAttributes.Gender.ToString(),
+                            age = _detectedFace.FaceAttributes.Age,
+                            emotion = Aggregation.GetSentimentForIndex(idx, emo).ToString(),
+                            timecreated = DateTime.UtcNow
+                        };
+
+                        var messageString = JsonConvert.SerializeObject(faceData);
+                        await _eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(messageString)));
+                        idx++;
+                        Trace.WriteLine("EVENT-HUB message:  " + messageString);
+                    }
+
+                }
+
+            }
+
+            return new LiveCameraResult {
+                Faces = faces,
+                EmotionScores = emo
+            };
         }
 
         /// <summary> Function which submits a frame to the Emotion API. </summary>
@@ -204,35 +265,8 @@ namespace LiveCameraSample
             // Submit image to API. 
             Emotion[] emotions = null;
 
-            // See if we have local face detections for this image.
-            var localFaces = (OpenCvSharp.Rect[])frame.UserData;
-            if (localFaces == null)
-            {
-                // If localFaces is null, we're not performing local face detection.
-                // Use Cognigitve Services to do the face detection.
-                Properties.Settings.Default.EmotionAPICallCount++;
-                emotions = await _emotionClient.RecognizeAsync(jpg);
-            }
-            else if (localFaces.Count() > 0)
-            {
-                // If we have local face detections, we can call the API with them. 
-                // First, convert the OpenCvSharp rectangles. 
-                var rects = localFaces.Select(
-                    f => new Microsoft.ProjectOxford.Common.Rectangle
-                    {
-                        Left = f.Left,
-                        Top = f.Top,
-                        Width = f.Width,
-                        Height = f.Height
-                    });
-                Properties.Settings.Default.EmotionAPICallCount++;
-                emotions = await _emotionClient.RecognizeAsync(jpg, rects.ToArray());
-            }
-            else
-            {
-                // Local face detection found no faces; don't call Cognitive Services.
-                emotions = new Emotion[0];
-            }
+            Properties.Settings.Default.EmotionAPICallCount++;
+            emotions = await _emotionClient.RecognizeAsync(jpg);
 
             // Output. 
             return new LiveCameraResult
@@ -388,7 +422,15 @@ namespace LiveCameraSample
             // Create API clients. 
             _faceClient = new FaceServiceClient(Properties.Settings.Default.FaceAPIKey);
             _emotionClient = new EmotionServiceClient(Properties.Settings.Default.EmotionAPIKey);
-            _visionClient = new VisionServiceClient(Properties.Settings.Default.VisionAPIKey);
+
+            // Creates an EventHubsConnectionStringBuilder object from the connection string, and sets the EntityPath.
+            // Typically, the connection string should have the entity path in it, but for the sake of this simple scenario
+            // we are using the connection string from the namespace.
+            var connectionStringBuilder = new EventHubsConnectionStringBuilder(Properties.Settings.Default.VisionAPIKey)
+            {
+                EntityPath = EhEntityPath
+            };
+            _eventHubClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
 
             // How often to analyze. 
             _grabber.TriggerAnalysisOnInterval(Properties.Settings.Default.AnalysisInterval);
