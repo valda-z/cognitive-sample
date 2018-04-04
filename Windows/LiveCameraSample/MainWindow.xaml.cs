@@ -97,13 +97,6 @@ namespace LiveCameraSample
             // Set up a listener for when the client receives a new frame.
             _grabber.NewFrameProvided += (s, e) =>
             {
-                if (_mode == AppMode.Faces)
-                {
-                    // Local face detection. 
-                    var rects = _localFaceDetector.DetectMultiScale(e.Frame.Image);
-                    // Attach faces to frame. 
-                    e.Frame.UserData = rects;
-                }
 
                 // The callback may occur on a different thread, so we must use the
                 // MainWindow.Dispatcher when manipulating the UI. 
@@ -112,12 +105,11 @@ namespace LiveCameraSample
                     // Display the image in the left pane.
                     LeftImage.Source = e.Frame.Image.ToBitmapSource();
 
-                    // If we're fusing client-side face detection with remote analysis, show the
-                    // new frame now with the most recent analysis available. 
-                    if (_fuseClientRemoteResults)
-                    {
-                        RightImage.Source = VisualizeResult(e.Frame);
-                    }
+
+                    //TODO: some magic arround VisionAPI
+                    //###########
+
+                    //RightImage.Source = VisualizeResult(e.Frame);
                 }));
 
                 // See if auto-stop should be triggered. 
@@ -325,6 +317,7 @@ namespace LiveCameraSample
             // Draw any results on top of the image. 
             BitmapSource visImage = frame.Image.ToBitmapSource();
 
+            /*
             var result = _latestResultsToDisplay;
 
             if (result != null)
@@ -342,6 +335,7 @@ namespace LiveCameraSample
                 visImage = Visualization.DrawFaces(visImage, result.Faces, result.EmotionScores, result.CelebrityNames);
                 visImage = Visualization.DrawTags(visImage, result.Tags);
             }
+            */
 
             return visImage;
         }
