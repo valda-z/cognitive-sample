@@ -209,8 +209,11 @@ namespace LiveCameraSample
                 var jpg2 = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
 
                 // Submit image to API. 
-                var attrs = new List<FaceAttributeType> { FaceAttributeType.Age,
-                FaceAttributeType.Gender };
+                var attrs = new List<FaceAttributeType>
+                {
+                    FaceAttributeType.Age,
+                    FaceAttributeType.Gender
+                };
                 faces = await _faceClient.DetectAsync(jpg, returnFaceAttributes: attrs);
                 // Count the API call. 
                 Properties.Settings.Default.FaceAPICallCount++;
