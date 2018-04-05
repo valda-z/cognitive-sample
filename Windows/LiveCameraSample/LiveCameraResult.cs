@@ -33,18 +33,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace LiveCameraSample
 {
+    public class ResultItem
+    {
+        public string Label { get; set; }
+        public Rect Box { get; set; }
+    }
     // Class to hold all possible result types. 
     public class LiveCameraResult
     {
-        public Microsoft.ProjectOxford.Face.Contract.Face[] Faces { get; set; } = null;
-        public Microsoft.ProjectOxford.Common.Contract.EmotionScores[] EmotionScores { get; set; } = null;
-        public string[] CelebrityNames { get; set; } = null;
-        public Microsoft.ProjectOxford.Vision.Contract.Tag[] Tags { get; set; } = null;
+        public ResultItem[] Items;
     }
 }

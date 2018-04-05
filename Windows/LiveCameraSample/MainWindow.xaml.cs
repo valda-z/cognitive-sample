@@ -51,6 +51,8 @@ using Microsoft.ProjectOxford.Vision;
 using VideoFrameAnalyzer;
 using Microsoft.Azure.EventHubs;
 using System.Text;
+using System.Net.Http;
+using System.Net;
 
 namespace LiveCameraSample
 {
@@ -130,38 +132,16 @@ namespace LiveCameraSample
                     }
                     else if (e.Exception != null)
                     {
-                        string apiName = "";
+                        string apiName = "API";
                         string message = e.Exception.Message;
-                        var faceEx = e.Exception as FaceAPIException;
-                        var emotionEx = e.Exception as Microsoft.ProjectOxford.Common.ClientException;
-                        var visionEx = e.Exception as Microsoft.ProjectOxford.Vision.ClientException;
-                        if (faceEx != null)
-                        {
-                            apiName = "Face";
-                            message = faceEx.ErrorMessage;
-                        }
-                        else if (emotionEx != null)
-                        {
-                            apiName = "Emotion";
-                            message = emotionEx.Error.Message;
-                        }
-                        else if (visionEx != null)
-                        {
-                            apiName = "Computer Vision";
-                            message = visionEx.Error.Message;
-                        }
+
                         MessageArea.Text = string.Format("{0} API call failed on frame {1}. Exception: {2}", apiName, e.Frame.Metadata.Index, message);
                     }
                     else
                     {
                         _latestResultsToDisplay = e.Analysis;
 
-                        // Display the image and visualization in the right pane. 
-                        if (!_fuseClientRemoteResults && (grabberDelay==0 ||
-                            (_latestResultsToDisplay.Faces != null && _latestResultsToDisplay.Faces.Length > 0)))
-                        {
-                            RightImage.Source = VisualizeResult(e.Frame);
-                        }
+                        RightImage.Source = VisualizeResult(e.Frame);
 
                     }
                 }));
@@ -171,145 +151,55 @@ namespace LiveCameraSample
             _localFaceDetector.Load("Data/haarcascade_frontalface_alt2.xml");
         }
 
-        /// <summary> Function which submits a frame to the Face API. </summary>
-        /// <param name="frame"> The video frame to submit. </param>
-        /// <returns> A <see cref="Task{LiveCameraResult}"/> representing the asynchronous API call,
-        ///     and containing the faces returned by the API. </returns>
-        private async Task<LiveCameraResult> FacesAnalysisFunction(VideoFrame frame)
-        {
-            var rects = (OpenCvSharp.Rect[])frame.UserData;
-            Trace.WriteLine(">>>>>>>>>>>> " + rects.Length.ToString() + " ... " + DateTime.Now.ToString() + " | " + grabberDelay.ToString());
-            Face[] faces = null;
-            Microsoft.ProjectOxford.Common.Contract.EmotionScores[] emo = null;
-
-            // skipping detected image for few times
-            if (grabberDelay > 0)
-            {
-                grabberDelay++;
-                if (grabberDelay > 6)
-                {
-                    grabberDelay = 0;
-                }
-            }
-
-            if (rects.Length > 0 && grabberDelay==0)
-            {
-                grabberDelay = 1;
-
-                // Encode image. 
-                var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
-                var jpg2 = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
-
-                // Submit image to API. 
-                var attrs = new List<FaceAttributeType>
-                {
-                    FaceAttributeType.Age,
-                    FaceAttributeType.Gender
-                };
-                faces = await _faceClient.DetectAsync(jpg, returnFaceAttributes: attrs);
-                // Count the API call. 
-                Properties.Settings.Default.FaceAPICallCount++;
-                // Output. 
-
-                // Submit image to API. 
-                Emotion[] emotions = null;
-
-                if (faces.Length > 0)
-                {
-                    Properties.Settings.Default.EmotionAPICallCount++;
-                    emotions = await _emotionClient.RecognizeAsync(jpg2);
-
-                    emo = emotions.Select(e => e.Scores).ToArray();
-
-                    int idx = 0;
-                    foreach (var _detectedFace in faces)
-                    {
-                        var faceData = new
-                        {
-                            personId = _detectedFace.FaceId,
-                            gender = _detectedFace.FaceAttributes.Gender.ToString(),
-                            age = _detectedFace.FaceAttributes.Age,
-                            emotion = Aggregation.GetSentimentForIndex(idx, emo).ToString(),
-                            timecreated = DateTime.UtcNow
-                        };
-
-                        var messageString = JsonConvert.SerializeObject(faceData);
-                        await _eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(messageString)));
-                        idx++;
-                        Trace.WriteLine("EVENT-HUB message:  " + messageString);
-                    }
-
-                }
-
-            }
-
-            return new LiveCameraResult {
-                Faces = faces,
-                EmotionScores = emo
-            };
-        }
-
         /// <summary> Function which submits a frame to the Emotion API. </summary>
         /// <param name="frame"> The video frame to submit. </param>
         /// <returns> A <see cref="Task{LiveCameraResult}"/> representing the asynchronous API call,
         ///     and containing the emotions returned by the API. </returns>
-        private async Task<LiveCameraResult> EmotionAnalysisFunction(VideoFrame frame)
+        private async Task<LiveCameraResult> ImageAnalysisFunction(VideoFrame frame)
         {
             // Encode image. 
             var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
+            var arr = new List<ResultItem>();
+
+            var strImg = System.Convert.ToBase64String(jpg.ToArray());
+
             // Submit image to API. 
-            Emotion[] emotions = null;
-
-            Properties.Settings.Default.EmotionAPICallCount++;
-            emotions = await _emotionClient.RecognizeAsync(jpg);
-
-            // Output. 
-            return new LiveCameraResult
+            //send transformed XML to server
+            using (var client = new HttpClient())
             {
-                Faces = emotions.Select(e => CreateFace(e.FaceRectangle)).ToArray(),
-                // Extract emotion scores from results. 
-                EmotionScores = emotions.Select(e => e.Scores).ToArray()
-            };
-        }
+                var content = new StringContent(strImg, Encoding.UTF8, "application/json");
+                var result = client.PostAsync("http://51.144.34.64:32773/score", content).Result;
 
-        /// <summary> Function which submits a frame to the Computer Vision API for tagging. </summary>
-        /// <param name="frame"> The video frame to submit. </param>
-        /// <returns> A <see cref="Task{LiveCameraResult}"/> representing the asynchronous API call,
-        ///     and containing the tags returned by the API. </returns>
-        private async Task<LiveCameraResult> TaggingAnalysisFunction(VideoFrame frame)
-        {
-            // Encode image. 
-            var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
-            // Submit image to API. 
-            var analysis = await _visionClient.GetTagsAsync(jpg);
-            // Count the API call. 
-            Properties.Settings.Default.VisionAPICallCount++;
-            // Output. 
-            return new LiveCameraResult { Tags = analysis.Tags };
-        }
+                string resultContent = await result.Content.ReadAsStringAsync();
+                if (result.StatusCode == HttpStatusCode.OK)
+                {
+                    resultContent = resultContent.Replace("\"\\\"", "");
+                    resultContent = resultContent.Replace("\\\"\"", "");
+                    foreach(string i in resultContent.Split('|'))
+                    {
+                        if (i.Trim().Length > 0 && i.Split(',').Length>0)
+                        {
+                            var itm = new ResultItem();
+                            //| label: r , box: [343, 425, 378, 459] 
+                            itm.Label = i.Split(',')[0].Trim().Replace("label: ", "");
+                            
+                            var x = i.Split('[')[1].Trim().Replace("]", "").Split(',');
+                            itm.Box = new System.Windows.Rect(
+                                int.Parse(x[0]),
+                                int.Parse(x[1]),
+                                int.Parse(x[2]) - int.Parse(x[0]),
+                                int.Parse(x[3]) - int.Parse(x[1]));
+                            arr.Add(itm);
+                        }
+                    }
+                }
+            }
 
-        /// <summary> Function which submits a frame to the Computer Vision API for celebrity
-        ///     detection. </summary>
-        /// <param name="frame"> The video frame to submit. </param>
-        /// <returns> A <see cref="Task{LiveCameraResult}"/> representing the asynchronous API call,
-        ///     and containing the celebrities returned by the API. </returns>
-        private async Task<LiveCameraResult> CelebrityAnalysisFunction(VideoFrame frame)
-        {
-            // Encode image. 
-            var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
-            // Submit image to API. 
-            var result = await _visionClient.AnalyzeImageInDomainAsync(jpg, "celebrities");
-            // Count the API call. 
-            Properties.Settings.Default.VisionAPICallCount++;
+
             // Output. 
-            var celebs = JsonConvert.DeserializeObject<CelebritiesResult>(result.Result.ToString()).Celebrities;
-            return new LiveCameraResult
-            {
-                // Extract face rectangles from results. 
-                Faces = celebs.Select(c => CreateFace(c.FaceRectangle)).ToArray(),
-                // Extract celebrity names from results. 
-                CelebrityNames = celebs.Select(c => c.Name).ToArray()
-            };
+            var ret = new LiveCameraResult();
+            ret.Items = arr.ToArray<ResultItem>();
+            return ret;
         }
 
         private BitmapSource VisualizeResult(VideoFrame frame)
@@ -317,25 +207,12 @@ namespace LiveCameraSample
             // Draw any results on top of the image. 
             BitmapSource visImage = frame.Image.ToBitmapSource();
 
-            /*
             var result = _latestResultsToDisplay;
 
             if (result != null)
             {
-                // See if we have local face detections for this image.
-                var clientFaces = (OpenCvSharp.Rect[])frame.UserData;
-                if (clientFaces != null && result.Faces != null)
-                {
-                    // If so, then the analysis results might be from an older frame. We need to match
-                    // the client-side face detections (computed on this frame) with the analysis
-                    // results (computed on the older frame) that we want to display. 
-                    MatchAndReplaceFaceRectangles(result.Faces, clientFaces);
-                }
-
-                visImage = Visualization.DrawFaces(visImage, result.Faces, result.EmotionScores, result.CelebrityNames);
-                visImage = Visualization.DrawTags(visImage, result.Tags);
+                visImage = Visualization.DrawResults(visImage, result);
             }
-            */
 
             return visImage;
         }
@@ -371,36 +248,8 @@ namespace LiveCameraSample
 
         private void ModeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Disable "most-recent" results display. 
             _fuseClientRemoteResults = false;
-
-            var comboBox = sender as ComboBox;
-            var modes = (AppMode[])Enum.GetValues(typeof(AppMode));
-            _mode = modes[comboBox.SelectedIndex];
-            switch (_mode)
-            {
-                case AppMode.Faces:
-                    _grabber.AnalysisFunction = FacesAnalysisFunction;
-                    break;
-                case AppMode.Emotions:
-                    _grabber.AnalysisFunction = EmotionAnalysisFunction;
-                    break;
-                case AppMode.EmotionsWithClientFaceDetect:
-                    // Same as Emotions, except we will display the most recent faces combined with
-                    // the most recent API results. 
-                    _grabber.AnalysisFunction = EmotionAnalysisFunction;
-                    _fuseClientRemoteResults = true;
-                    break;
-                case AppMode.Tags:
-                    _grabber.AnalysisFunction = TaggingAnalysisFunction;
-                    break;
-                case AppMode.Celebrities:
-                    _grabber.AnalysisFunction = CelebrityAnalysisFunction;
-                    break;
-                default:
-                    _grabber.AnalysisFunction = null;
-                    break;
-            }
+            _grabber.AnalysisFunction = ImageAnalysisFunction;
         }
 
         private async void StartButton_Click(object sender, RoutedEventArgs e)
@@ -412,13 +261,13 @@ namespace LiveCameraSample
             }
 
             // Clean leading/trailing spaces in API keys. 
-            Properties.Settings.Default.FaceAPIKey = Properties.Settings.Default.FaceAPIKey.Trim();
-            Properties.Settings.Default.EmotionAPIKey = Properties.Settings.Default.EmotionAPIKey.Trim();
-            Properties.Settings.Default.VisionAPIKey = Properties.Settings.Default.VisionAPIKey.Trim();
+            //Properties.Settings.Default.FaceAPIKey = Properties.Settings.Default.FaceAPIKey.Trim();
+            //Properties.Settings.Default.EmotionAPIKey = Properties.Settings.Default.EmotionAPIKey.Trim();
+            //Properties.Settings.Default.VisionAPIKey = Properties.Settings.Default.VisionAPIKey.Trim();
 
             // Create API clients. 
-            _faceClient = new FaceServiceClient(Properties.Settings.Default.FaceAPIKey);
-            _emotionClient = new EmotionServiceClient(Properties.Settings.Default.EmotionAPIKey);
+            //_faceClient = new FaceServiceClient(Properties.Settings.Default.FaceAPIKey);
+            //_emotionClient = new EmotionServiceClient(Properties.Settings.Default.EmotionAPIKey);
 
             // Creates an EventHubsConnectionStringBuilder object from the connection string, and sets the EntityPath.
             // Typically, the connection string should have the entity path in it, but for the sake of this simple scenario
@@ -505,30 +354,5 @@ namespace LiveCameraSample
             };
         }
 
-        private void MatchAndReplaceFaceRectangles(Face[] faces, OpenCvSharp.Rect[] clientRects)
-        {
-            // Use a simple heuristic for matching the client-side faces to the faces in the
-            // results. Just sort both lists left-to-right, and assume a 1:1 correspondence. 
-
-            // Sort the faces left-to-right. 
-            var sortedResultFaces = faces
-                .OrderBy(f => f.FaceRectangle.Left + 0.5 * f.FaceRectangle.Width)
-                .ToArray();
-
-            // Sort the clientRects left-to-right.
-            var sortedClientRects = clientRects
-                .OrderBy(r => r.Left + 0.5 * r.Width)
-                .ToArray();
-
-            // Assume that the sorted lists now corrrespond directly. We can simply update the
-            // FaceRectangles in sortedResultFaces, because they refer to the same underlying
-            // objects as the input "faces" array. 
-            for (int i = 0; i < Math.Min(faces.Length, clientRects.Length); i++)
-            {
-                // convert from OpenCvSharp rectangles
-                OpenCvSharp.Rect r = sortedClientRects[i];
-                sortedResultFaces[i].FaceRectangle = new FaceRectangle { Left = r.Left, Top = r.Top, Width = r.Width, Height = r.Height };
-            }
-        }
     }
 }

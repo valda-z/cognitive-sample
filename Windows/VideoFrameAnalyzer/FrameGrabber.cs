@@ -241,6 +241,8 @@ namespace VideoFrameAnalyzer
                         }
                     }
 
+                    Cv2.Resize(image[0, Height, 0, Height], image, new Size(850, 850), 0, 0, InterpolationFlags.Linear);
+
                     // Package the image for submission.
                     VideoFrameMetadata meta;
                     meta.Index = frameCount;

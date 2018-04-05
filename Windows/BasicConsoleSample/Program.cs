@@ -54,14 +54,6 @@ namespace BasicConsoleSample
                 Console.WriteLine("New frame acquired at {0}", e.Frame.Metadata.Timestamp);
             };
 
-            // Set up Face API call.
-            grabber.AnalysisFunction = async frame =>
-            {
-                Console.WriteLine("Submitting frame acquired at {0}", frame.Metadata.Timestamp);
-                // Encode image and submit to Face API. 
-                return await faceClient.DetectAsync(frame.Image.ToMemoryStream(".jpg"));
-            };
-
             // Set up a listener for when we receive a new result from an API call. 
             grabber.NewResultAvailable += (s, e) =>
             {
