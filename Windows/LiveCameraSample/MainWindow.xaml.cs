@@ -168,11 +168,12 @@ namespace LiveCameraSample
             using (var client = new HttpClient())
             {
                 var content = new StringContent(strImg, Encoding.UTF8, "application/json");
-                var result = client.PostAsync("http://51.144.34.64:32773/score", content).Result;
-
-                string resultContent = await result.Content.ReadAsStringAsync();
+                var result = await client.PostAsync("http://51.144.34.64:32773/score", content);
+                result.EnsureSuccessStatusCode();
+                string resultContent = "";
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
+                    resultContent = await result.Content.ReadAsStringAsync();
                     resultContent = resultContent.Replace("\"\\\"", "");
                     resultContent = resultContent.Replace("\\\"\"", "");
                     foreach(string i in resultContent.Split('|'))
