@@ -172,7 +172,8 @@ namespace LiveCameraSample
                 //CPU
                 //var result = await client.PostAsync("http://51.145.152.160:32770/score", content);
                 //CPU FAST
-                var result = await client.PostAsync("http://51.144.49.190:32779/score", content);
+                //http://51.144.49.190:32779/score
+                var result = await client.PostAsync(Properties.Settings.Default.VisionAPIKey + "/score", content);
                 
                 //GPU
                 //var result = await client.PostAsync("http://52.171.198.226:32770/score", content);
@@ -281,11 +282,11 @@ namespace LiveCameraSample
             // Creates an EventHubsConnectionStringBuilder object from the connection string, and sets the EntityPath.
             // Typically, the connection string should have the entity path in it, but for the sake of this simple scenario
             // we are using the connection string from the namespace.
-            var connectionStringBuilder = new EventHubsConnectionStringBuilder(Properties.Settings.Default.VisionAPIKey)
-            {
-                EntityPath = EhEntityPath
-            };
-            _eventHubClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+            //var connectionStringBuilder = new EventHubsConnectionStringBuilder(Properties.Settings.Default.VisionAPIKey)
+            //{
+            //    EntityPath = EhEntityPath
+            //};
+            //_eventHubClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
 
             // How often to analyze. 
             _grabber.TriggerAnalysisOnInterval(Properties.Settings.Default.AnalysisInterval);
