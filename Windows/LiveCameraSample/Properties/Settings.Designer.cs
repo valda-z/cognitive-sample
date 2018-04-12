@@ -49,7 +49,7 @@ namespace LiveCameraSample.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://51.144.49.190:32779")]
         public string VisionAPIKey {
             get {
                 return ((string)(this["VisionAPIKey"]));
