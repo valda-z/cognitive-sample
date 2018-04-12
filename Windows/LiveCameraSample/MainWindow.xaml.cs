@@ -168,7 +168,15 @@ namespace LiveCameraSample
             using (var client = new HttpClient())
             {
                 var content = new StringContent(strImg, Encoding.UTF8, "application/json");
-                var result = await client.PostAsync("http://51.144.34.64:32773/score", content);
+
+                //CPU
+                //var result = await client.PostAsync("http://51.145.152.160:32770/score", content);
+                //CPU FAST
+                var result = await client.PostAsync("http://51.144.49.190:32779/score", content);
+                
+                //GPU
+                //var result = await client.PostAsync("http://52.171.198.226:32770/score", content);
+
                 result.EnsureSuccessStatusCode();
                 string resultContent = "";
                 if (result.StatusCode == HttpStatusCode.OK)
