@@ -53,6 +53,7 @@ using Microsoft.Azure.EventHubs;
 using System.Text;
 using System.Net.Http;
 using System.Net;
+using System.IO;
 
 namespace LiveCameraSample
 {
@@ -159,9 +160,15 @@ namespace LiveCameraSample
         {
             // Encode image. 
             var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
+
             var arr = new List<ResultItem>();
 
             var strImg = System.Convert.ToBase64String(jpg.ToArray());
+
+            // save input image
+            string folderName = @"C:\work\original\";
+
+            File.WriteAllBytes(folderName + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", Convert.FromBase64String(strImg));
 
             // Submit image to API. 
             //send transformed XML to server
@@ -211,7 +218,7 @@ namespace LiveCameraSample
             ret.Items = arr.ToArray<ResultItem>();
             return ret;
         }
-
+        
         private BitmapSource VisualizeResult(VideoFrame frame)
         {
             // Draw any results on top of the image. 
@@ -224,6 +231,17 @@ namespace LiveCameraSample
                 visImage = Visualization.DrawResults(visImage, result);
             }
 
+            //save output image
+            /*
+            string folderName = @"C:\work\result\";
+
+            using (var fileStream = new FileStream(folderName + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", FileMode.Create))
+            {
+                BitmapEncoder encoder = new JpegBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(visImage));
+                encoder.Save(fileStream);
+            }
+            */
             return visImage;
         }
 
