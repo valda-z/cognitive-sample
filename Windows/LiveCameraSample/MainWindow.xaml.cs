@@ -166,9 +166,9 @@ namespace LiveCameraSample
             var strImg = System.Convert.ToBase64String(jpg.ToArray());
 
             // save input image
-            string folderName = @"C:\work\original\";
+            string folderName = @"C:\TMP\IMGs\testx\1out\";
 
-            File.WriteAllBytes(folderName + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", Convert.FromBase64String(strImg));
+            File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", Convert.FromBase64String(strImg));
 
             // Submit image to API. 
             //send transformed XML to server
@@ -232,16 +232,16 @@ namespace LiveCameraSample
             }
 
             //save output image
-            /*
-            string folderName = @"C:\work\result\";
 
-            using (var fileStream = new FileStream(folderName + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", FileMode.Create))
+            string folderName = @"C:\TMP\IMGs\testx\2in\";
+
+            using (var fileStream = new FileStream(folderName + "SCORED_"+ DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", FileMode.Create))
             {
                 BitmapEncoder encoder = new JpegBitmapEncoder();
                 encoder.Frames.Add(BitmapFrame.Create(visImage));
                 encoder.Save(fileStream);
             }
-            */
+            
             return visImage;
         }
 
