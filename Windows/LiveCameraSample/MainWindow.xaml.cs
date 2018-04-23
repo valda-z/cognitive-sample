@@ -206,11 +206,12 @@ namespace LiveCameraSample
         {
             // Encode image. 
             var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
-            //OutputArray x = null;
-            Mat m = frame.Image.CvtColor(ColorConversionCodes.BGR2GRAY).Laplacian(MatType.CV_64F);
-            Mat mean = new Mat(), stddev = new Mat();
-            m.MeanStdDev(mean, stddev);
-            double variance = Math.Pow(stddev.At<double>(0), 2);
+            
+            ////Detecting Blur
+            //Mat m = frame.Image.CvtColor(ColorConversionCodes.BGR2GRAY).Laplacian(MatType.CV_64F);
+            //Mat mean = new Mat(), stddev = new Mat();
+            //m.MeanStdDev(mean, stddev);
+            //double variance = Math.Pow(stddev.At<double>(0), 2);
             
             var arr = new List<ResultItem>();
 
@@ -219,7 +220,8 @@ namespace LiveCameraSample
             // save input image
             string folderName = @"C:\TMP\IMGs\testx\1out\";
 
-            File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + "_var_"+ variance  + ".jpg", Convert.FromBase64String(strImg));
+            //File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + "_var_"+ variance  + ".jpg", Convert.FromBase64String(strImg));
+            //File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", Convert.FromBase64String(strImg));
 
             // Submit image to API. 
             //send transformed XML to server
@@ -227,15 +229,8 @@ namespace LiveCameraSample
             {
                 var content = new StringContent(strImg, Encoding.UTF8, "application/json");
 
-                //CPU
-                //var result = await client.PostAsync("http://51.145.152.160:32770/score", content);
-                //CPU FAST
-                //http://51.144.49.190:32779/score
                 var result = await client.PostAsync(Properties.Settings.Default.VisionAPIKey + "/score", content);
                 
-                //GPU
-                //var result = await client.PostAsync("http://52.171.198.226:32770/score", content);
-
                 result.EnsureSuccessStatusCode();
                 string resultContent = "";
                 if (result.StatusCode == HttpStatusCode.OK)
@@ -286,14 +281,13 @@ namespace LiveCameraSample
 
             //save output image
 
-            string folderName = @"C:\TMP\IMGs\testx\2in\";
-
-            using (var fileStream = new FileStream(folderName + "SCORED_"+ DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", FileMode.Create))
-            {
-                BitmapEncoder encoder = new JpegBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(visImage));
-                encoder.Save(fileStream);
-            }
+            //string folderName = @"C:\TMP\IMGs\testx\2in\";
+            //using (var fileStream = new FileStream(folderName + "SCORED_"+ DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", FileMode.Create))
+            //{
+            //    BitmapEncoder encoder = new JpegBitmapEncoder();
+            //    encoder.Frames.Add(BitmapFrame.Create(visImage));
+            //    encoder.Save(fileStream);
+            //}
             
             return visImage;
         }
