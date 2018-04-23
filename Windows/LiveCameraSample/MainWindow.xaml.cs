@@ -54,6 +54,7 @@ using System.Text;
 using System.Net.Http;
 using System.Net;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace LiveCameraSample
 {
@@ -87,7 +88,49 @@ namespace LiveCameraSample
             Tags,
             Celebrities
         }
+        private double variance(int[] nums)
+        {
+            if (nums.Length > 1)
+            {
 
+                // Get the average of the values
+                double avg = getAverage(nums);
+
+                // Now figure out how far each point is from the mean
+                // So we subtract from the number the average
+                // Then raise it to the power of 2
+                double sumOfSquares = 0.0;
+
+                foreach (int num in nums)
+                {
+                    sumOfSquares += Math.Pow((num - avg), 2.0);
+                }
+
+                // Finally divide it by n - 1 (for standard deviation variance)
+                // Or use length without subtracting one ( for population standard deviation variance)
+                return sumOfSquares / (double)(nums.Length - 1);
+            }
+            else { return 0.0; }
+        }
+        // Get the average of our values in the array
+        private double getAverage(int[] nums)
+        {
+            int sum = 0;
+
+            if (nums.Length > 1)
+            {
+
+                // Sum up the values
+                foreach (int num in nums)
+                {
+                    sum += num;
+                }
+
+                // Divide by the number of values
+                return sum / (double)nums.Length;
+            }
+            else { return (double)nums[0]; }
+        }
         public MainWindow()
         {
             InitializeComponent();
@@ -111,7 +154,10 @@ namespace LiveCameraSample
 
                     //TODO: some magic arround VisionAPI
                     //###########
+                   
+                   
 
+                    
                     //RightImage.Source = VisualizeResult(e.Frame);
                 }));
 
@@ -160,7 +206,12 @@ namespace LiveCameraSample
         {
             // Encode image. 
             var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
-
+            //OutputArray x = null;
+            Mat m = frame.Image.CvtColor(ColorConversionCodes.BGR2GRAY).Laplacian(MatType.CV_64F);
+            Mat mean = new Mat(), stddev = new Mat();
+            m.MeanStdDev(mean, stddev);
+            double variance = Math.Pow(stddev.At<double>(0), 2);
+            
             var arr = new List<ResultItem>();
 
             var strImg = System.Convert.ToBase64String(jpg.ToArray());
@@ -168,7 +219,7 @@ namespace LiveCameraSample
             // save input image
             string folderName = @"C:\TMP\IMGs\testx\1out\";
 
-            File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", Convert.FromBase64String(strImg));
+            File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + "_var_"+ variance  + ".jpg", Convert.FromBase64String(strImg));
 
             // Submit image to API. 
             //send transformed XML to server
@@ -188,8 +239,10 @@ namespace LiveCameraSample
                 result.EnsureSuccessStatusCode();
                 string resultContent = "";
                 if (result.StatusCode == HttpStatusCode.OK)
+                //if (true)
                 {
                     resultContent = await result.Content.ReadAsStringAsync();
+                    //resultContent = " | label: collector-112, box: [342, 212, 377, 304] | label: collector-110116, box: [291, 45, 337, 132] | label: collector-113115, box: [25, 190, 70, 257] | label: defect-yellow-107108109, box: [9, 22, 69, 46] | label: collector-111114, box: [238, 221, 284, 278]";
                     resultContent = resultContent.Replace("\"\\\"", "");
                     resultContent = resultContent.Replace("\\\"\"", "");
                     foreach(string i in resultContent.Split('|'))
@@ -199,7 +252,7 @@ namespace LiveCameraSample
                             var itm = new ResultItem();
                             //| label: r , box: [343, 425, 378, 459] 
                             itm.Label = i.Split(',')[0].Trim().Replace("label: ", "");
-                            
+                            itm.Label = itm.Label ;
                             var x = i.Split('[')[1].Trim().Replace("]", "").Split(',');
                             itm.Box = new System.Windows.Rect(
                                 int.Parse(x[0]),
