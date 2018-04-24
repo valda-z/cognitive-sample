@@ -44,7 +44,6 @@ using Newtonsoft.Json;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using Microsoft.ProjectOxford.Emotion;
-using Microsoft.ProjectOxford.Emotion.Contract;
 using Microsoft.ProjectOxford.Face;
 using Microsoft.ProjectOxford.Face.Contract;
 using Microsoft.ProjectOxford.Vision;
@@ -55,6 +54,8 @@ using System.Net.Http;
 using System.Net;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Configuration;
+
 
 namespace LiveCameraSample
 {
@@ -198,6 +199,13 @@ namespace LiveCameraSample
             _localFaceDetector.Load("Data/haarcascade_frontalface_alt2.xml");
         }
 
+
+        //private const string EventHubConnectionString = "Endpoint=sb://events-vison.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=MXZL92ws7xu6GthE5Hkc6uPtzmMe31bEzuTC800q+7w=";
+        private static EventHubClient eventHubClient;
+        private const string EventHubName = "eventhub";
+        private static string EventHubConnectionString = ConfigurationManager.ConnectionStrings["eventhubconnectionstring"].ConnectionString;
+        
+
         /// <summary> Function which submits a frame to the Emotion API. </summary>
         /// <param name="frame"> The video frame to submit. </param>
         /// <returns> A <see cref="Task{LiveCameraResult}"/> representing the asynchronous API call,
@@ -261,12 +269,34 @@ namespace LiveCameraSample
             }
 
 
+
             // Output. 
             var ret = new LiveCameraResult();
             ret.Items = arr.ToArray<ResultItem>();
+
+            
+            eventHubClient = CreateEventHubConnection(EventHubConnectionString);
+
+            
+            var jsonData = JsonConvert.SerializeObject(ret);
+
+            await eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(jsonData)));
+
+            await eventHubClient.CloseAsync();
+
             return ret;
         }
         
+        private EventHubClient CreateEventHubConnection(string EventHubConnectionString)
+        {
+            var connectionStringBuilder = new EventHubsConnectionStringBuilder(EventHubConnectionString)
+            {
+                EntityPath = EventHubName
+            };
+
+            return eventHubClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+        }
+
         private BitmapSource VisualizeResult(VideoFrame frame)
         {
             // Draw any results on top of the image. 

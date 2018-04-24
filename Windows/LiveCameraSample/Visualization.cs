@@ -40,7 +40,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Microsoft.ProjectOxford.Emotion.Contract;
+using Microsoft.ProjectOxford.Emotion;
 using Microsoft.ProjectOxford.Face.Contract;
 using Microsoft.ProjectOxford.Vision.Contract;
 
@@ -108,10 +108,10 @@ namespace LiveCameraSample
                             16 * annotationScale, Brushes.Black);
 
                         var pad = 3 * annotationScale;
-
+                        
                         var ypad = pad;
                         var xpad = pad + 4 * annotationScale;
-                        var origin = new Point(
+                        var origin = new System.Windows.Point(
                             itemRect.Left + xpad - lineThickness / 2,
                             itemRect.Top - ft.Height - ypad + lineThickness / 2);
                         var rect = ft.BuildHighlightGeometry(origin).GetRenderBounds(null);
