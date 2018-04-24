@@ -200,7 +200,6 @@ namespace LiveCameraSample
         }
 
 
-        //private const string EventHubConnectionString = "Endpoint=sb://events-vison.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=MXZL92ws7xu6GthE5Hkc6uPtzmMe31bEzuTC800q+7w=";
         private static EventHubClient eventHubClient;
         private const string EventHubName = "eventhub";
         private static string EventHubConnectionString = ConfigurationManager.ConnectionStrings["eventhubconnectionstring"].ConnectionString;
