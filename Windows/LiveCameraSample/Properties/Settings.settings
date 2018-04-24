@@ -2,13 +2,13 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="LiveCameraSample.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="FaceAPIKey" Type="System.String" Scope="User">
+    <Setting Name="EventHubConnectionString" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="EmotionAPIKey" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="VisionAPIKey" Type="System.String" Scope="User">
+    <Setting Name="MLScoringAPIEndpoint" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="SettingsPanelVisibility" Type="System.Windows.Visibility" Scope="User">

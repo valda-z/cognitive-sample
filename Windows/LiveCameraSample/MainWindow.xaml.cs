@@ -202,8 +202,9 @@ namespace LiveCameraSample
 
         private static EventHubClient eventHubClient;
         private const string EventHubName = "eventhub";
-        private static string EventHubConnectionString = ConfigurationManager.ConnectionStrings["eventhubconnectionstring"].ConnectionString;
-        
+        //private static string EventHubConnectionString = ConfigurationManager.ConnectionStrings["eventhubconnectionstring"].ConnectionString;
+        private static string EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString;
+
 
         /// <summary> Function which submits a frame to the Emotion API. </summary>
         /// <param name="frame"> The video frame to submit. </param>
@@ -236,7 +237,7 @@ namespace LiveCameraSample
             {
                 var content = new StringContent(strImg, Encoding.UTF8, "application/json");
 
-                var result = await client.PostAsync(Properties.Settings.Default.VisionAPIKey + "/score", content);
+                var result = await client.PostAsync(Properties.Settings.Default.MLScoringAPIEndpoint, content);
                 
                 result.EnsureSuccessStatusCode();
                 string resultContent = "";
@@ -365,9 +366,9 @@ namespace LiveCameraSample
             }
 
             // Clean leading/trailing spaces in API keys. 
-            //Properties.Settings.Default.FaceAPIKey = Properties.Settings.Default.FaceAPIKey.Trim();
+            Properties.Settings.Default.EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString.Trim();
             //Properties.Settings.Default.EmotionAPIKey = Properties.Settings.Default.EmotionAPIKey.Trim();
-            //Properties.Settings.Default.VisionAPIKey = Properties.Settings.Default.VisionAPIKey.Trim();
+            //Properties.Settings.Default.MLScoringAPIEndpoint = Properties.Settings.Default.MLScoringAPIEndpoint.Trim();
 
             // Create API clients. 
             //_faceClient = new FaceServiceClient(Properties.Settings.Default.FaceAPIKey);
@@ -376,7 +377,7 @@ namespace LiveCameraSample
             // Creates an EventHubsConnectionStringBuilder object from the connection string, and sets the EntityPath.
             // Typically, the connection string should have the entity path in it, but for the sake of this simple scenario
             // we are using the connection string from the namespace.
-            //var connectionStringBuilder = new EventHubsConnectionStringBuilder(Properties.Settings.Default.VisionAPIKey)
+            //var connectionStringBuilder = new EventHubsConnectionStringBuilder(Properties.Settings.Default.MLScoringAPIEndpoint)
             //{
             //    EntityPath = EhEntityPath
             //};

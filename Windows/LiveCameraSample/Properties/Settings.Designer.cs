@@ -12,7 +12,7 @@ namespace LiveCameraSample.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.7.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.6.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -26,12 +26,12 @@ namespace LiveCameraSample.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string FaceAPIKey {
+        public string EventHubConnectionString {
             get {
-                return ((string)(this["FaceAPIKey"]));
+                return ((string)(this["EventHubConnectionString"]));
             }
             set {
-                this["FaceAPIKey"] = value;
+                this["EventHubConnectionString"] = value;
             }
         }
         
@@ -50,12 +50,12 @@ namespace LiveCameraSample.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string VisionAPIKey {
+        public string MLScoringAPIEndpoint {
             get {
-                return ((string)(this["VisionAPIKey"]));
+                return ((string)(this["MLScoringAPIEndpoint"]));
             }
             set {
-                this["VisionAPIKey"] = value;
+                this["MLScoringAPIEndpoint"] = value;
             }
         }
         
