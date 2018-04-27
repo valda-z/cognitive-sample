@@ -64,6 +64,7 @@ namespace LiveCameraSample
     /// </summary>
     public partial class MainWindow : System.Windows.Window
     {
+        private static bool _SAVE_IMAGES = false;
         private EmotionServiceClient _emotionClient = null;
         private FaceServiceClient _faceClient = null;
         private VisionServiceClient _visionClient = null;
@@ -215,11 +216,12 @@ namespace LiveCameraSample
             // Encode image. 
             var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
             
+            
             ////Detecting Blur
-            //Mat m = frame.Image.CvtColor(ColorConversionCodes.BGR2GRAY).Laplacian(MatType.CV_64F);
-            //Mat mean = new Mat(), stddev = new Mat();
-            //m.MeanStdDev(mean, stddev);
-            //double variance = Math.Pow(stddev.At<double>(0), 2);
+            Mat m = frame.Image.CvtColor(ColorConversionCodes.BGR2GRAY).Laplacian(MatType.CV_64F);
+            Mat mean = new Mat(), stddev = new Mat();
+            m.MeanStdDev(mean, stddev);
+            double variance = Math.Pow(stddev.At<double>(0), 2);
             
             var arr = new List<ResultItem>();
 
@@ -227,9 +229,11 @@ namespace LiveCameraSample
 
             // save input image
             string folderName = @"C:\TMP\IMGs\testx\1out\";
-
-            //File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + "_var_"+ variance  + ".jpg", Convert.FromBase64String(strImg));
-            //File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", Convert.FromBase64String(strImg));
+            if (_SAVE_IMAGES)
+            {
+                File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + "_var_" + variance + ".jpg", Convert.FromBase64String(strImg));
+                //File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", Convert.FromBase64String(strImg));
+            }
 
             // Submit image to API. 
             //send transformed XML to server
