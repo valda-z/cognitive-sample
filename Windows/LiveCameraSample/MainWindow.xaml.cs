@@ -82,6 +82,12 @@ namespace LiveCameraSample
         private static EventHubClient _eventHubClient;
         private const string EhEntityPath = "faces";
 
+
+        private EventHubClient eventHubClient;
+        private const string EventHubName = "eventhub";
+        //private static string EventHubConnectionString = ConfigurationManager.ConnectionStrings["eventhubconnectionstring"].ConnectionString;
+        private static string EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString;
+
         public enum AppMode
         {
             Faces,
@@ -201,10 +207,7 @@ namespace LiveCameraSample
         }
 
 
-        private static EventHubClient eventHubClient;
-        private const string EventHubName = "eventhub";
-        //private static string EventHubConnectionString = ConfigurationManager.ConnectionStrings["eventhubconnectionstring"].ConnectionString;
-        private static string EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString;
+        
 
 
         /// <summary> Function which submits a frame to the Emotion API. </summary>
@@ -217,11 +220,7 @@ namespace LiveCameraSample
             var jpg = frame.Image.ToMemoryStream(".jpg", s_jpegParams);
             
             
-            ////Detecting Blur
-            Mat m = frame.Image.CvtColor(ColorConversionCodes.BGR2GRAY).Laplacian(MatType.CV_64F);
-            Mat mean = new Mat(), stddev = new Mat();
-            m.MeanStdDev(mean, stddev);
-            double variance = Math.Pow(stddev.At<double>(0), 2);
+            
             
             var arr = new List<ResultItem>();
 
@@ -231,6 +230,13 @@ namespace LiveCameraSample
             string folderName = @"C:\TMP\IMGs\testx\1out\";
             if (_SAVE_IMAGES)
             {
+                ////Detecting Blur
+                Mat m = frame.Image.CvtColor(ColorConversionCodes.BGR2GRAY).Laplacian(MatType.CV_64F);
+                Mat mean = new Mat(), stddev = new Mat();
+                m.MeanStdDev(mean, stddev);
+                double variance = Math.Pow(stddev.At<double>(0), 2);
+
+
                 File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + "_var_" + variance + ".jpg", Convert.FromBase64String(strImg));
                 //File.WriteAllBytes(folderName + "ORIG_" + DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", Convert.FromBase64String(strImg));
             }
@@ -278,16 +284,16 @@ namespace LiveCameraSample
             var ret = new LiveCameraResult();
             ret.Items = arr.ToArray<ResultItem>();
 
-            
-            eventHubClient = CreateEventHubConnection(EventHubConnectionString);
+            if (true) { 
+                //eventHubClient = CreateEventHubConnection(EventHubConnectionString);
 
             
-            var jsonData = JsonConvert.SerializeObject(ret);
+                var jsonData = JsonConvert.SerializeObject(ret);
 
-            await eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(jsonData)));
+                await eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(jsonData)));
 
-            await eventHubClient.CloseAsync();
-
+                //await eventHubClient.CloseAsync();
+            }
             return ret;
         }
         
@@ -314,15 +320,15 @@ namespace LiveCameraSample
             }
 
             //save output image
-
-            //string folderName = @"C:\TMP\IMGs\testx\2in\";
-            //using (var fileStream = new FileStream(folderName + "SCORED_"+ DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", FileMode.Create))
-            //{
-            //    BitmapEncoder encoder = new JpegBitmapEncoder();
-            //    encoder.Frames.Add(BitmapFrame.Create(visImage));
-            //    encoder.Save(fileStream);
-            //}
-            
+            if (_SAVE_IMAGES) {
+                //string folderName = @"C:\TMP\IMGs\testx\2in\";
+                //using (var fileStream = new FileStream(folderName + "SCORED_"+ DateTime.Now.ToString("yyyy-MM-dd__HH-mm-ss") + ".jpg", FileMode.Create))
+                //{
+                //    BitmapEncoder encoder = new JpegBitmapEncoder();
+                //    encoder.Frames.Add(BitmapFrame.Create(visImage));
+                //    encoder.Save(fileStream);
+                //}
+            }
             return visImage;
         }
 
@@ -371,6 +377,9 @@ namespace LiveCameraSample
 
             // Clean leading/trailing spaces in API keys. 
             Properties.Settings.Default.EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString.Trim();
+
+            eventHubClient = CreateEventHubConnection(EventHubConnectionString);
+
             //Properties.Settings.Default.EmotionAPIKey = Properties.Settings.Default.EmotionAPIKey.Trim();
             //Properties.Settings.Default.MLScoringAPIEndpoint = Properties.Settings.Default.MLScoringAPIEndpoint.Trim();
 
@@ -401,6 +410,7 @@ namespace LiveCameraSample
 
         private async void StopButton_Click(object sender, RoutedEventArgs e)
         {
+            await eventHubClient.CloseAsync();
             await _grabber.StopProcessingAsync();
         }
 
