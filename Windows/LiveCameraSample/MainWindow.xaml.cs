@@ -88,6 +88,8 @@ namespace LiveCameraSample
         //private static string EventHubConnectionString = ConfigurationManager.ConnectionStrings["eventhubconnectionstring"].ConnectionString;
         private static string EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString;
 
+        private int currentBase = 1;
+
         public enum AppMode
         {
             Faces,
@@ -283,12 +285,15 @@ namespace LiveCameraSample
             // Output. 
             var ret = new LiveCameraResult();
             ret.Items = arr.ToArray<ResultItem>();
+            ret.baseID = this.currentBase;
 
-            if (true) { 
+            //if (ret.Items.Length > 0) { 
+            if (true) {
                 //eventHubClient = CreateEventHubConnection(EventHubConnectionString);
 
-            
+
                 var jsonData = JsonConvert.SerializeObject(ret);
+                //MessageArea.Text = "Sent: " + jsonData;
 
                 await eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(jsonData)));
 
@@ -398,20 +403,57 @@ namespace LiveCameraSample
 
             // How often to analyze. 
             _grabber.TriggerAnalysisOnInterval(Properties.Settings.Default.AnalysisInterval);
-
+            
             // Reset message. 
             MessageArea.Text = "";
 
             // Record start time, for auto-stop
             _startTime = DateTime.Now;
 
+            StartButton.IsEnabled = !StartButton.IsEnabled;
+            StopButton.IsEnabled = !StopButton.IsEnabled;
             await _grabber.StartProcessingCameraAsync(CameraList.SelectedIndex);
         }
 
         private async void StopButton_Click(object sender, RoutedEventArgs e)
         {
+            StartButton.IsEnabled = !StartButton.IsEnabled;
+            StopButton.IsEnabled = !StopButton.IsEnabled;
             await eventHubClient.CloseAsync();
             await _grabber.StopProcessingAsync();
+        }
+
+        private async void Base1_Click(object sender, RoutedEventArgs e)
+        {
+            this.currentBase = 1;
+            MessageArea.Text = "Current base switched to: " + this.currentBase;
+
+            Base1.IsEnabled = !Base1.IsEnabled;
+
+            Base2.IsEnabled = !Base1.IsEnabled;
+            Base3.IsEnabled = !Base1.IsEnabled;
+
+        }
+        private async void Base2_Click(object sender, RoutedEventArgs e)
+        {
+            this.currentBase = 2;
+            MessageArea.Text = "Current base switched to: " + this.currentBase;
+
+            Base2.IsEnabled = !Base2.IsEnabled;
+
+            Base1.IsEnabled = !Base2.IsEnabled;
+            Base3.IsEnabled = !Base2.IsEnabled;
+        }
+        private async void Base3_Click(object sender, RoutedEventArgs e)
+        {
+            this.currentBase = 3;
+            MessageArea.Text = "Current base switched to: " + this.currentBase;
+
+            Base3.IsEnabled = !Base3.IsEnabled;
+
+            Base1.IsEnabled = !Base3.IsEnabled;
+            Base2.IsEnabled = !Base3.IsEnabled;
+            
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)

@@ -5,29 +5,35 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LiveCameraSample"
         mc:Ignorable="d"
-        Title="LiveCameraSample" Height="550" Width="725">
+        Title="Drone Smart Check" Height="550" Icon="Data/drone1.png" WindowStyle="ThreeDBorderWindow">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="35" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="77.714" />
+            <RowDefinition />
             <RowDefinition Height="35" />
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" Grid.Row="0" Name="ButtonBar">
-            <ComboBox x:Name="CameraList" Width="100" Margin="5,5,0,5" Loaded="CameraList_Loaded" />
-            <Button Content="Start Camera" Padding="5,0" Margin="5,5,0,5" Click="StartButton_Click" />
-            <Button Content="Stop Camera" Padding="5,0" Margin="5,5,0,5" Click="StopButton_Click" />
-            <TextBlock VerticalAlignment="Center" Margin="15,5,0,5" Text="Mode:" />
-            <ComboBox x:Name="ModeList" Width="100" Margin="5,5,0,5" Loaded="ModeList_Loaded" SelectionChanged="ModeList_SelectionChanged" />
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Name="ButtonBar" Margin="0,0,0.429,4.714">
+            <Image x:Name="app_icon" Width="62" Margin="10,0,0,0" Source="Data/drone2.png" />
+            <Image x:Name="app_logo" Width="200" Margin="0,0,0,0" Source="Data/app_image1.jpg" />
+            <Image Width="62" Margin="0,0,0,0" />
+            <Button x:Name="StartButton" Click="StartButton_Click" Content="Start" Width="62" Height="62" Padding="5,0" Margin="5,5,0,5" Background="#FF07A02C" />
+            <Button x:Name="StopButton" Click="StopButton_Click"  Content="Stop" Width="62" Height="62" Padding="5,0" Margin="5,5,0,5" IsEnabled="False" Background="#FFC30303" />
+            <Image Width="18" Margin="0,0,0,0.143" />
+            <Button x:Name="Base1" Click="Base1_Click" Content="1" Width="62" Height="62" Padding="5,0" Margin="5,5,0,5" IsEnabled="False" />
+            <Button x:Name="Base2" Click="Base2_Click" Content="2" Width="62" Height="62" Padding="5,0" Margin="5,5,0,5" />
+            <Button x:Name="Base3" Click="Base3_Click" Content="3" Width="62" Height="62" Padding="5,0" Margin="5,5,0,5" />
+            <Image Width="62" Margin="0,0,0,0" />
         </StackPanel>
-        <Button Content="Show/Hide Settings" Padding="5,0" Margin="5" Click="SettingsButton_Click" HorizontalAlignment="Right" />
-        <Grid Grid.Row="1">
+        <Button Content="Settings" Padding="5,0" Margin="0,5,5,8" Click="SettingsButton_Click" HorizontalAlignment="Right" />
+        <Grid Margin="0,74,0.429,0.286" Grid.RowSpan="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="50*" />
-                <ColumnDefinition Width="50*" />
+                <ColumnDefinition Width="129*" />
+                <ColumnDefinition Width="231*"/>
+                <ColumnDefinition Width="359*" />
             </Grid.ColumnDefinitions>
-            <Image x:Name="LeftImage" Grid.Column="0" Margin="5"  Panel.ZIndex="1" />
-            <Image x:Name="RightImage" Grid.Column="1" Margin="5" Panel.ZIndex="1" />
-            <StackPanel Visibility="{Binding Source={StaticResource Settings}, Path=Default.SettingsPanelVisibility, Mode=TwoWay}" Panel.ZIndex="2" Name="SettingsPanel" Background="LightGray" VerticalAlignment="Top" Margin="113,5,5.429,0" Grid.ColumnSpan="2">
+            <Image x:Name="LeftImage" Grid.Column="0" Margin="5,5,5,5.429"  Panel.ZIndex="1" Grid.ColumnSpan="2" />
+            <Image x:Name="RightImage" Grid.Column="2" Margin="5,5,5.429,5.429" Panel.ZIndex="1" />
+            <StackPanel Visibility="{Binding Source={StaticResource Settings}, Path=Default.SettingsPanelVisibility, Mode=TwoWay}" Panel.ZIndex="2" Name="SettingsPanel" Background="LightGray" VerticalAlignment="Top" Margin="113,5,5.429,0" Grid.ColumnSpan="3" Height="248">
                 <TextBlock Margin="5" Grid.Row="0" FontWeight="Bold" Text="Settings"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -69,8 +75,11 @@
                 -->
                 <CheckBox Margin="5" IsChecked="{Binding Source={StaticResource Settings}, Path=Default.AutoStopEnabled}" ContentStringFormat="Automatically stop after {0}" Content="{Binding Source={StaticResource Settings}, Path=Default.AutoStopTime}" />
                 <Button Margin="5" Content="Save" Click="SaveSettingsButton_Click" />
+                <ComboBox x:Name="CameraList" Margin="5,0,496.143,0" Loaded="CameraList_Loaded" Height="25" />
+                <TextBlock VerticalAlignment="Center" Margin="15,5,552.143,5" Text="Mode:" />
+                <ComboBox x:Name="ModeList" Margin="5,0,496.143,0" Loaded="ModeList_Loaded" SelectionChanged="ModeList_SelectionChanged" Height="25" />
             </StackPanel>
         </Grid>
-        <TextBlock Name="MessageArea" Margin="5" Grid.Row="2" VerticalAlignment="Center" />
+        <TextBlock Name="MessageArea" Margin="5,9.714,5.429,9.143" Grid.Row="2" VerticalAlignment="Center" Height="16" />
     </Grid>
 </Window>

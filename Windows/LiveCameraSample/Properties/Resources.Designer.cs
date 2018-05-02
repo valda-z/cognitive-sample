@@ -59,5 +59,14 @@ namespace LiveCameraSample.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to data\\app_image1.jpg.
+        /// </summary>
+        internal static string app_logo {
+            get {
+                return ResourceManager.GetString("app_logo", resourceCulture);
+            }
+        }
     }
 }

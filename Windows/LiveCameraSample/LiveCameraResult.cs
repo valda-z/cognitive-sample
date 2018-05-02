@@ -50,5 +50,6 @@ namespace LiveCameraSample
     public class LiveCameraResult
     {
         public ResultItem[] Items;
+        public int baseID = -1;
     }
 }

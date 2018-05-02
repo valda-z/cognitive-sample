@@ -49,6 +49,7 @@ namespace LiveCameraSample
     public class Visualization
     {
         private static SolidColorBrush s_lineBrush = new SolidColorBrush(new System.Windows.Media.Color { R = 255, G = 185, B = 0, A = 255 });
+        private static SolidColorBrush s_lineBrush_Defect = new SolidColorBrush(new System.Windows.Media.Color { R = 255, G = 0, B = 0, A = 255 });
         private static Typeface s_typeface = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
 
         private static BitmapSource DrawOverlay(BitmapSource baseImage, Action<DrawingContext, double> drawAction)
@@ -106,7 +107,7 @@ namespace LiveCameraSample
                         FormattedText ft = new FormattedText(text,
                             CultureInfo.CurrentCulture, FlowDirection.LeftToRight, s_typeface,
                             16 * annotationScale, Brushes.Black);
-
+                        
                         var pad = 3 * annotationScale;
                         
                         var ypad = pad;
@@ -117,7 +118,14 @@ namespace LiveCameraSample
                         var rect = ft.BuildHighlightGeometry(origin).GetRenderBounds(null);
                         rect.Inflate(xpad, ypad);
 
-                        drawingContext.DrawRectangle(s_lineBrush, null, rect);
+                        if (text.StartsWith("Defect", true, CultureInfo.CurrentCulture))
+                        {
+                            drawingContext.DrawRectangle(s_lineBrush_Defect, null, rect);
+                        } else
+                        {
+                            drawingContext.DrawRectangle(s_lineBrush, null, rect);
+                        }
+                        
                         drawingContext.DrawText(ft, origin);
                     }
                 }
