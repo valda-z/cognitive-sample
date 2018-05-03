@@ -86,7 +86,7 @@ namespace LiveCameraSample
         private EventHubClient eventHubClient;
         private const string EventHubName = "eventhub";
         //private static string EventHubConnectionString = ConfigurationManager.ConnectionStrings["eventhubconnectionstring"].ConnectionString;
-        private static string EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString;
+        private static string EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString.Trim();
 
         private int currentBase = 1;
 
@@ -381,7 +381,7 @@ namespace LiveCameraSample
             }
 
             // Clean leading/trailing spaces in API keys. 
-            Properties.Settings.Default.EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString.Trim();
+            //EventHubConnectionString = Properties.Settings.Default.EventHubConnectionString.Trim();
 
             eventHubClient = CreateEventHubConnection(EventHubConnectionString);
 
