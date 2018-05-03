@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LiveCameraSample"
         mc:Ignorable="d"
-        Title="Drone Smart Check" Height="550" Icon="Data/drone1.png" WindowStyle="ThreeDBorderWindow">
+        Title="Drone Smart Check" Height="550" Icon="Data/drone1.png" WindowStyle="ThreeDBorderWindow" Width="890.571">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="77.714" />
@@ -24,7 +24,11 @@
             <Button x:Name="Base3" Click="Base3_Click" Content="3" Width="62" Height="62" Padding="5,0" Margin="5,5,0,5" />
             <Image Width="62" Margin="0,0,0,0" />
         </StackPanel>
-        <Button Content="Settings" Padding="5,0" Margin="0,5,5,8" Click="SettingsButton_Click" HorizontalAlignment="Right" />
+        <Button Content="" Padding="5,0" Margin="0,5,5,8" Click="SettingsButton_Click" HorizontalAlignment="Right" Width="32" Height="32" >
+            <Button.Background>
+                <ImageBrush ImageSource="Data/settings.png" Stretch="Uniform"/>
+            </Button.Background>
+        </Button>
         <Grid Margin="0,74,0.429,0.286" Grid.RowSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="129*" />
@@ -80,6 +84,7 @@
                 <ComboBox x:Name="ModeList" Margin="5,0,496.143,0" Loaded="ModeList_Loaded" SelectionChanged="ModeList_SelectionChanged" Height="25" />
             </StackPanel>
         </Grid>
-        <TextBlock Name="MessageArea" Margin="5,9.714,5.429,9.143" Grid.Row="2" VerticalAlignment="Center" Height="16" />
+        <TextBlock Name="MessageArea" Margin="5,9.714,5.429,9.143" Grid.Row="3" VerticalAlignment="Center" Height="16" />
+        <Image x:Name="msft_icon"  Grid.Row="1" Width="156" Margin="729,408.286,-0.429,0.143" Source="Data/msft-gray.png" Grid.RowSpan="2" Height="18" />
     </Grid>
 </Window>
