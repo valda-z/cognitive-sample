@@ -24,10 +24,8 @@
             <Button x:Name="Base3" Click="Base3_Click" Content="3" Width="62" Height="62" Padding="5,0" Margin="5,5,0,5" />
             <Image Width="62" Margin="0,0,0,0" />
         </StackPanel>
-        <Button Content="" Padding="5,0" Margin="0,5,5,8" Click="SettingsButton_Click" HorizontalAlignment="Right" Width="32" Height="32" >
-            <Button.Background>
-                <ImageBrush ImageSource="Data/settings.png" Stretch="Uniform"/>
-            </Button.Background>
+        <Button Padding="5,0" Margin="0,5,5,8" Click="SettingsButton_Click" HorizontalAlignment="Right" Width="32" Height="32" >
+            <Image Source="Data/settings.png" Stretch="Uniform"/>
         </Button>
         <Grid Margin="0,74,0.429,0.286" Grid.RowSpan="2">
             <Grid.ColumnDefinitions>
@@ -85,6 +83,6 @@
             </StackPanel>
         </Grid>
         <TextBlock Name="MessageArea" Margin="5,9.714,5.429,9.143" Grid.Row="3" VerticalAlignment="Center" Height="16" />
-        <Image x:Name="msft_icon"  Grid.Row="1" Width="156" Margin="729,408.286,-0.429,0.143" Source="Data/msft-gray.png" Grid.RowSpan="2" Height="18" />
+        <Image x:Name="msft_icon"  Grid.Row="1" Width="156" Source="Data/msft-gray.png" Grid.RowSpan="2" Height="18" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,12,12" />
     </Grid>
 </Window>
