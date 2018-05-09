@@ -50,6 +50,9 @@ namespace LiveCameraSample
     {
         private static SolidColorBrush s_lineBrush = new SolidColorBrush(new System.Windows.Media.Color { R = 255, G = 185, B = 0, A = 255 });
         private static SolidColorBrush s_lineBrush_Defect = new SolidColorBrush(new System.Windows.Media.Color { R = 255, G = 0, B = 0, A = 255 });
+        private static SolidColorBrush s_lineBrush_Safety = new SolidColorBrush(new System.Windows.Media.Color { R = 200, G = 0, B = 255, A = 255 });
+        private static SolidColorBrush s_lineBrush_Safety_Area = new SolidColorBrush(new System.Windows.Media.Color { R = 200, G = 0, B = 255, A = 55 });
+
         private static Typeface s_typeface = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
 
         private static BitmapSource DrawOverlay(BitmapSource baseImage, Action<DrawingContext, double> drawAction)
@@ -83,6 +86,41 @@ namespace LiveCameraSample
 
             Action<DrawingContext, double> drawAction = (drawingContext, annotationScale) =>
             {
+                StreamGeometry streamGeometry = new StreamGeometry();
+                PointCollection points = new PointCollection();
+                int points_num = 0;
+
+                using (StreamGeometryContext geometryContext = streamGeometry.Open())
+                {
+                    for (int i = 0; i < results.Items.Length; i++)
+                    {
+                        var item = results.Items[i];
+                        if (item.Box == null) { continue; }
+                        if (!item.Label.StartsWith("red", true, CultureInfo.CurrentCulture)) { continue; }
+
+                        Rect itemRect = new Rect(
+                            item.Box.Left, item.Box.Top,
+                            item.Box.Width, item.Box.Height);
+
+                        System.Windows.Point p = new System.Windows.Point(item.Box.Left + item.Box.Width / 2, item.Box.Top + item.Box.Height / 2);
+                        
+                        if (points_num == 0)
+                        {
+                            geometryContext.BeginFigure(p, true, true);
+                        } else
+                        {
+                            points.Add(p);
+                        }
+                        points_num++;
+                        geometryContext.PolyLineTo(points, true, true);
+                    }
+                }
+                streamGeometry.Freeze();
+                // if there are more than 3 points... area
+                if ( points_num >= 3 )
+                {
+                    drawingContext.DrawGeometry(s_lineBrush_Safety_Area, new Pen(s_lineBrush_Safety_Area, 2), streamGeometry);
+                }
                 for (int i = 0; i < results.Items.Length; i++)
                 {
                     var item = results.Items[i];
@@ -97,10 +135,19 @@ namespace LiveCameraSample
 
                     double lineThickness = 4 * annotationScale;
 
-                    drawingContext.DrawRectangle(
-                        Brushes.Transparent,
-                        new Pen(s_lineBrush, lineThickness),
-                        itemRect);
+                    
+                    if (text.StartsWith("Defect", true, CultureInfo.CurrentCulture))
+                    {
+                        drawingContext.DrawRectangle(Brushes.Transparent, new Pen(s_lineBrush_Defect, lineThickness), itemRect);
+                    }
+                    else if (text.StartsWith("safety", true, CultureInfo.CurrentCulture))
+                    {
+                        drawingContext.DrawRectangle(Brushes.Transparent, new Pen(s_lineBrush_Safety, lineThickness), itemRect);
+                    }
+                    else
+                    {
+                        drawingContext.DrawRectangle(Brushes.Transparent, new Pen(s_lineBrush, lineThickness), itemRect);
+                    }
 
                     if (text != "")
                     {
@@ -118,13 +165,19 @@ namespace LiveCameraSample
                         var rect = ft.BuildHighlightGeometry(origin).GetRenderBounds(null);
                         rect.Inflate(xpad, ypad);
 
-                        if (text.StartsWith("Defect", true, CultureInfo.CurrentCulture))
-                        {
-                            drawingContext.DrawRectangle(s_lineBrush_Defect, null, rect);
-                        } else
-                        {
+                        //if (text.StartsWith("Defect", true, CultureInfo.CurrentCulture))
+                        //{
+                        //    drawingContext.DrawRectangle(s_lineBrush_Defect, null, rect);
+                        //}
+                        //else if (text.StartsWith("safety", true, CultureInfo.CurrentCulture))
+                        //{
+                        //    drawingContext.DrawRectangle(s_lineBrush_Safety, null, rect);
+
+                        //}
+                        //else
+                        //{
                             drawingContext.DrawRectangle(s_lineBrush, null, rect);
-                        }
+                        //}
                         
                         drawingContext.DrawText(ft, origin);
                     }
