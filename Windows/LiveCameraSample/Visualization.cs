@@ -165,20 +165,20 @@ namespace LiveCameraSample
                         var rect = ft.BuildHighlightGeometry(origin).GetRenderBounds(null);
                         rect.Inflate(xpad, ypad);
 
-                        //if (text.StartsWith("Defect", true, CultureInfo.CurrentCulture))
-                        //{
-                        //    drawingContext.DrawRectangle(s_lineBrush_Defect, null, rect);
-                        //}
-                        //else if (text.StartsWith("safety", true, CultureInfo.CurrentCulture))
-                        //{
-                        //    drawingContext.DrawRectangle(s_lineBrush_Safety, null, rect);
+                        if (text.StartsWith("Defect", true, CultureInfo.CurrentCulture))
+                        {
+                            drawingContext.DrawRectangle(s_lineBrush_Defect, null, rect);
+                        }
+                        else if (text.StartsWith("safety", true, CultureInfo.CurrentCulture))
+                        {
+                            drawingContext.DrawRectangle(s_lineBrush_Safety, null, rect);
 
-                        //}
-                        //else
-                        //{
+                        }
+                        else
+                        {
                             drawingContext.DrawRectangle(s_lineBrush, null, rect);
-                        //}
-                        
+                        }
+
                         drawingContext.DrawText(ft, origin);
                     }
                 }
