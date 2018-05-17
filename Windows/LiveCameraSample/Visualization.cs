@@ -135,7 +135,32 @@ namespace LiveCameraSample
 
                     double lineThickness = 4 * annotationScale;
 
-                    
+                    if (text.StartsWith("Defect", true, CultureInfo.CurrentCulture))
+                    {
+                        text = "Defect Warning";
+                    }
+                    else if (text.StartsWith("Safety", true, CultureInfo.CurrentCulture))
+                    {
+                        text = "Safety Danger (Person)"; 
+                    }
+                    else if (text.StartsWith("Person", true, CultureInfo.CurrentCulture))
+                    {
+                        text = "Person";
+                    }
+                    else if (text.StartsWith("Red", true, CultureInfo.CurrentCulture))
+                    {
+                        text = ".";
+                    }
+                    else if (text.StartsWith("Horse", true, CultureInfo.CurrentCulture))
+                    {
+                        text = "Horse";
+                    }
+                    else if (text.StartsWith("Collector", true, CultureInfo.CurrentCulture))
+                    {
+                        text = "Insulator";
+                    }
+
+
                     if (text.StartsWith("Defect", true, CultureInfo.CurrentCulture))
                     {
                         drawingContext.DrawRectangle(Brushes.Transparent, new Pen(s_lineBrush_Defect, lineThickness), itemRect);
@@ -171,7 +196,7 @@ namespace LiveCameraSample
                         }
                         else if (text.StartsWith("safety", true, CultureInfo.CurrentCulture))
                         {
-                            drawingContext.DrawRectangle(s_lineBrush_Safety, null, rect);
+                            drawingContext.DrawRectangle(s_lineBrush_Defect, null, rect);
 
                         }
                         else
